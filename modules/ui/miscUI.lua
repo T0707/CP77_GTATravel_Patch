@@ -17,33 +17,19 @@ function miscUI.draw(gtaTravel)
     ImGui.Text("Enable GTA Travel from:")
     gtaTravel.CPS.colorEnd(1)
     ImGui.Separator()
-
-    state, changed = ImGui.Checkbox(
-        "Fast Travel Points to Fast Travel Points",
-        gtaTravel.settings.miscSettings.ftp2ftp
-    )
+    state, changed = ImGui.Checkbox("Fast Travel Points to Fast Travel Points",  gtaTravel.settings.miscSettings.ftp2ftp)
     if changed and state then
         miscUI.resetSettings(gtaTravel)
         gtaTravel.settings.miscSettings.ftp2ftp = state
     end
-
     ImGui.Separator()
-
-    state, changed = ImGui.Checkbox(
-        "Anywhere to Fast Travel Points",
-        gtaTravel.settings.miscSettings.anywhere2ftp
-    )
+    state, changed = ImGui.Checkbox("Anywhere to Fast Travel Points", gtaTravel.settings.miscSettings.anywhere2ftp)
     if changed and state then
         miscUI.resetSettings(gtaTravel)
         gtaTravel.settings.miscSettings.anywhere2ftp = state
     end
-
     ImGui.Separator()
-
-    state, changed = ImGui.Checkbox(
-        "Anywhere to Anywhere",
-        gtaTravel.settings.miscSettings.anywhere2anywhere
-    )
+    state, changed = ImGui.Checkbox("Anywhere to Anywhere", gtaTravel.settings.miscSettings.anywhere2anywhere)
     if changed and state then
         miscUI.resetSettings(gtaTravel)
         gtaTravel.settings.miscSettings.anywhere2anywhere = state
@@ -53,91 +39,45 @@ function miscUI.draw(gtaTravel)
     ImGui.EndChild()
 
     ImGui.BeginChild("resetStuff", miscUI.boxSize.x, 80, true)
-
     gtaTravel.CPS.colorBegin("Text", miscUI.colors.frame)
     ImGui.Text("Reset Stuff")
     gtaTravel.CPS.colorEnd(1)
-
     miscUI.tooltips.drawBtn(gtaTravel, "?", "resetStuff")
     ImGui.Separator()
-
-    local cam = gtaTravel.CPS.CPButton("Reset cam", 75, 30)
-
+    cam = gtaTravel.CPS.CPButton("Reset cam", 75, 30)
     if cam then
         miscUI.resetCam()
     end
-
     ImGui.SameLine()
-
-    local settings = gtaTravel.CPS.CPButton(
-        "Remove Restrictions",
-        150,
-        30
-    )
-
+    settings = gtaTravel.CPS.CPButton("Remove Restrictions", 150, 30)
     if settings then
         util.removeRestrictions()
         SaveLocksManager.RequestSaveLockRemove("gtaTravel")
     end
-
     ImGui.EndChild()
 
     local y = 125
-
-    if gtaTravel.settings.timeSettings.speedUp then
-        y = 150
-    end
+    if gtaTravel.settings.timeSettings.speedUp then y = 150 end
 
     ImGui.BeginChild("visuals", miscUI.boxSize.x, y, true)
-
     gtaTravel.CPS.colorBegin("Text", miscUI.colors.frame)
     ImGui.Text("Visual Settings")
     gtaTravel.CPS.colorEnd(1)
-
     ImGui.Separator()
-
-    gtaTravel.settings.visualSettings.noHud, c =
-        ImGui.Checkbox(
-            "Disable HUD",
-            gtaTravel.settings.visualSettings.noHud
-        )
-
+    gtaTravel.settings.visualSettings.noHud, c = ImGui.Checkbox("Disable HUD", gtaTravel.settings.visualSettings.noHud)
     if c and gtaTravel.flyPath then
-        gtaTravel.util.toggleHUD(
-            not gtaTravel.settings.visualSettings.noHud
-        )
+        gtaTravel.util.toggleHUD(not gtaTravel.settings.visualSettings.noHud)
     end
-
     miscUI.tooltips.drawBtn(gtaTravel, "?", "noHud")
-
-    gtaTravel.settings.visualSettings.blur =
-        ImGui.Checkbox(
-            "Enable Motion Blur",
-            gtaTravel.settings.visualSettings.blur
-        )
-
+    gtaTravel.settings.visualSettings.blur = ImGui.Checkbox("Enable Motion Blur", gtaTravel.settings.visualSettings.blur)
     if changed and gtaTravel.flyPath then
-        gtaTravel.util.toggleBlur(
-            gtaTravel.settings.visualSettings.blur
-        )
+        gtaTravel.util.toggleBlur(gtaTravel.settings.visualSettings.blur)
     end
-
     miscUI.tooltips.drawBtn(gtaTravel, "?", "blur")
 
-    gtaTravel.settings.timeSettings.speedUp =
-        ImGui.Checkbox(
-            "Speed up time during transition",
-            gtaTravel.settings.timeSettings.speedUp
-        )
-
+    gtaTravel.settings.timeSettings.speedUp = ImGui.Checkbox("Speed up time during transition", gtaTravel.settings.timeSettings.speedUp)
     if gtaTravel.settings.timeSettings.speedUp then
-        gtaTravel.settings.timeSettings.amount =
-            ImGui.SliderInt(
-                "Speed increase",
-                gtaTravel.settings.timeSettings.amount,
-                1,
-                25
-            )
+        gtaTravel.settings.timeSettings.amount = ImGui.SliderInt("Speed increase", gtaTravel.settings.timeSettings.amount, 1, 25)
     end
 
     ImGui.EndChild()
@@ -147,16 +87,10 @@ end
 
 function miscUI.resetCam()
     local player = Game.GetPlayer()
-
-    if not player then
-        return
-    end
+    if not player then return end
 
     local camera = player:GetFPPCameraComponent()
-
-    if not camera then
-        return
-    end
+    if not camera then return end
 
     camera.headingLocked = false
     camera.pitchMax = 79.99
