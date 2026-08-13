@@ -45,7 +45,9 @@ function miscUI.draw(gtaTravel)
     miscUI.tooltips.drawBtn(gtaTravel, "?", "resetStuff")
     ImGui.Separator()
     cam = gtaTravel.CPS.CPButton("Reset cam", 75, 30)
-
+    if cam then
+        miscUI.resetCam()
+    end
     ImGui.SameLine()
     settings = gtaTravel.CPS.CPButton("Remove Restrictions", 150, 30)
     if settings then
@@ -85,9 +87,15 @@ end
 
 function miscUI.resetCam()
     local player = Game.GetPlayer()
-    player:GetFPPCameraComponent().headingLocked = false
-    player:GetFPPCameraComponent().pitchMax = 79.99
-    player:GetFPPCameraComponent():SetLocalPosition(Vector4.new(0, 0, 0, 0))
+    if not player then return end
+
+    local camera = player:GetFPPCameraComponent()
+    if not camera then return end
+
+    camera.headingLocked = false
+    camera.pitchMax = 79.99
+    camera:SetLocalPosition(Vector4.new(0, 0, 0, 0))
+    camera:ResetPitch()
 end
 
 function miscUI.resetSettings(gtaTravel)
