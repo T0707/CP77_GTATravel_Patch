@@ -14,6 +14,8 @@
 --
 -------------------------------------------------------------------------------------------------------------------------------
 
+local GameSettings = require("modules/GameSettings")
+
 gtaTravel = {
     isUIVisible = false,
     pathing = require("modules/pathing"),
@@ -45,6 +47,11 @@ function gtaTravel:new()
         gtaTravel.config.startup(gtaTravel)
 
         gtaTravel.flyPath = false
+        gtaTravel.savedFOV = nil
+        gtaTravel.savedPitchMax = nil
+        gtaTravel.savedMouseX = nil
+        gtaTravel.savedMouseY = nil
+        gtaTravel.savedMouseZoomFactor = nil
         gtaTravel.currentStep = 1
         gtaTravel.stepsTodo = 0
         gtaTravel.resetPitch = false
@@ -67,8 +74,61 @@ function gtaTravel:new()
 
         if gtaTravel.resetPitch then
             gtaTravel.resetPitch = false
-            GetPlayer():GetFPPCameraComponent():ResetPitch()
-            GetPlayer():GetFPPCameraComponent().headingLocked = false
+
+            -- Run cleanup once more on the frame after GTA Travel ends.
+            -- This prevents camera/restriction state from surviving the final teleport.
+            gtaTravel.util.removeRestrictions()
+            Game.GetTimeSystem():UnsetTimeDilation("gtaTravel")
+
+            local player = GetPlayer()
+            if player then
+                local camera = player:GetFPPCameraComponent()
+                if camera then
+                    camera.headingLocked = false
+                    camera.pitchMax = gtaTravel.savedPitchMax or 79.99
+                    camera:SetLocalPosition(Vector4.new(0, 0, 0, 0))
+                    camera:ResetPitch()
+                end
+            end
+
+            -- Restore the exact FOV that was active before the transition.
+            if gtaTravel.savedFOV ~= nil then
+                GameSettings.Set("/graphics/basic/FieldOfView", gtaTravel.savedFOV)
+                if GameSettings.NeedsConfirmation() then
+                    GameSettings.Confirm()
+                end
+            end
+
+            -- Re-apply the exact first-person mouse settings. Apart from restoring
+            -- changed values, writing them again forces the game settings system
+            -- to refresh these immediately-applied input options after travel.
+            local mouseXBeforeRestore = GameSettings.Get("/controls/fppcameramouse/FPP_MouseX")
+            local mouseYBeforeRestore = GameSettings.Get("/controls/fppcameramouse/FPP_MouseY")
+            local zoomBeforeRestore = GameSettings.Get("/controls/fppcameramouse/FPP_MouseZoomFactor")
+
+            print(("[GTA Travel][input] cleanup before restore: X=%s Y=%s Zoom=%s"):format(
+                tostring(mouseXBeforeRestore), tostring(mouseYBeforeRestore), tostring(zoomBeforeRestore)))
+
+            if gtaTravel.savedMouseX ~= nil then
+                GameSettings.Set("/controls/fppcameramouse/FPP_MouseX", gtaTravel.savedMouseX)
+            end
+            if gtaTravel.savedMouseY ~= nil then
+                GameSettings.Set("/controls/fppcameramouse/FPP_MouseY", gtaTravel.savedMouseY)
+            end
+            if gtaTravel.savedMouseZoomFactor ~= nil then
+                GameSettings.Set("/controls/fppcameramouse/FPP_MouseZoomFactor", gtaTravel.savedMouseZoomFactor)
+            end
+
+            print(("[GTA Travel][input] cleanup after restore: X=%s Y=%s Zoom=%s"):format(
+                tostring(GameSettings.Get("/controls/fppcameramouse/FPP_MouseX")),
+                tostring(GameSettings.Get("/controls/fppcameramouse/FPP_MouseY")),
+                tostring(GameSettings.Get("/controls/fppcameramouse/FPP_MouseZoomFactor"))))
+
+            gtaTravel.savedFOV = nil
+            gtaTravel.savedPitchMax = nil
+            gtaTravel.savedMouseX = nil
+            gtaTravel.savedMouseY = nil
+            gtaTravel.savedMouseZoomFactor = nil
         end
 
         if gtaTravel.readyForGeneratePath then
@@ -84,7 +144,18 @@ function gtaTravel:new()
             if not gtaTravel.flyPath then
                 gtaTravel.setDirForVector = false
                 if not Game.GetWorkspotSystem():IsActorInWorkspot(GetPlayer()) then
-                    GetPlayer():GetFPPCameraComponent().pitchMax = -80
+                    local camera = GetPlayer():GetFPPCameraComponent()
+                    gtaTravel.savedFOV = GameSettings.Get("/graphics/basic/FieldOfView")
+                    gtaTravel.savedPitchMax = camera.pitchMax
+                    gtaTravel.savedMouseX = GameSettings.Get("/controls/fppcameramouse/FPP_MouseX")
+                    gtaTravel.savedMouseY = GameSettings.Get("/controls/fppcameramouse/FPP_MouseY")
+                    gtaTravel.savedMouseZoomFactor = GameSettings.Get("/controls/fppcameramouse/FPP_MouseZoomFactor")
+
+                    print(("[GTA Travel][input] saved before travel: X=%s Y=%s Zoom=%s"):format(
+                        tostring(gtaTravel.savedMouseX), tostring(gtaTravel.savedMouseY), tostring(gtaTravel.savedMouseZoomFactor)))
+
+                    camera.pitchMax = -80
+
                     gtaTravel.readyForGeneratePath = true
                     Game.GetStatPoolsSystem():RequestSettingStatPoolValue(GetPlayer():GetEntityID(), gamedataStatPoolType.Health, 100, nil)
 
@@ -138,8 +209,12 @@ function gtaTravel:new()
                 end
 
                 SaveLocksManager.RequestSaveLockRemove("gtaTravel")
+                Game.GetTimeSystem():UnsetTimeDilation("gtaTravel")
 
-                GetPlayer():GetFPPCameraComponent().pitchMax = 79.99
+                local camera = GetPlayer():GetFPPCameraComponent()
+                camera.headingLocked = false
+                camera.pitchMax = gtaTravel.savedPitchMax or 79.99
+
                 gtaTravel.currentStep = 1
                 gtaTravel.flyPath = false
                 gtaTravel.resetPitch = true
