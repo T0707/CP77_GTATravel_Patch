@@ -99,16 +99,8 @@ function gtaTravel:new()
                 end
             end
 
-            -- Re-apply the exact first-person mouse settings. Apart from restoring
-            -- changed values, writing them again forces the game settings system
-            -- to refresh these immediately-applied input options after travel.
-            local mouseXBeforeRestore = GameSettings.Get("/controls/fppcameramouse/FPP_MouseX")
-            local mouseYBeforeRestore = GameSettings.Get("/controls/fppcameramouse/FPP_MouseY")
-            local zoomBeforeRestore = GameSettings.Get("/controls/fppcameramouse/FPP_MouseZoomFactor")
-
-            print(("[GTA Travel][input] cleanup before restore: X=%s Y=%s Zoom=%s"):format(
-                tostring(mouseXBeforeRestore), tostring(mouseYBeforeRestore), tostring(zoomBeforeRestore)))
-
+            -- Re-apply the exact first-person mouse settings. Writing the same
+            -- values again refreshes the FPP mouse settings after the transition.
             if gtaTravel.savedMouseX ~= nil then
                 GameSettings.Set("/controls/fppcameramouse/FPP_MouseX", gtaTravel.savedMouseX)
             end
@@ -118,11 +110,6 @@ function gtaTravel:new()
             if gtaTravel.savedMouseZoomFactor ~= nil then
                 GameSettings.Set("/controls/fppcameramouse/FPP_MouseZoomFactor", gtaTravel.savedMouseZoomFactor)
             end
-
-            print(("[GTA Travel][input] cleanup after restore: X=%s Y=%s Zoom=%s"):format(
-                tostring(GameSettings.Get("/controls/fppcameramouse/FPP_MouseX")),
-                tostring(GameSettings.Get("/controls/fppcameramouse/FPP_MouseY")),
-                tostring(GameSettings.Get("/controls/fppcameramouse/FPP_MouseZoomFactor"))))
 
             gtaTravel.savedFOV = nil
             gtaTravel.savedPitchMax = nil
@@ -150,9 +137,6 @@ function gtaTravel:new()
                     gtaTravel.savedMouseX = GameSettings.Get("/controls/fppcameramouse/FPP_MouseX")
                     gtaTravel.savedMouseY = GameSettings.Get("/controls/fppcameramouse/FPP_MouseY")
                     gtaTravel.savedMouseZoomFactor = GameSettings.Get("/controls/fppcameramouse/FPP_MouseZoomFactor")
-
-                    print(("[GTA Travel][input] saved before travel: X=%s Y=%s Zoom=%s"):format(
-                        tostring(gtaTravel.savedMouseX), tostring(gtaTravel.savedMouseY), tostring(gtaTravel.savedMouseZoomFactor)))
 
                     camera.pitchMax = -80
 
